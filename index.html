@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MPA</title>
+    <script src="/bundle.js"></script>
+</head>
+<body>
+THIS_STRING_WILL_BE_REPLACED
+<script>
+  // const scr = document.createElement('script')
+  // scr.src = '/script-url'
+  // document.body.appendChild(scr)
+
+  const img = document.createElement('img')
+  img.src = '/sample.png'
+  document.body.appendChild(img)
+
+  // let xhr = new XMLHttpRequest()
+  // xhr.onreadystatechange = function () {
+  //   if (xhr.readyState === 4 && xhr.status === 200) {
+  //     console.log(xhr.responseText)
+  //   }
+  // }
+  // xhr.open('GET', '/script-url')
+  // xhr.send()
+
+  let xhrImg = new XMLHttpRequest()
+  xhrImg.responseType = "arraybuffer";
+  xhrImg.onreadystatechange = function () {
+    if (xhrImg.readyState === 4 && xhrImg.status === 200) {
+      const blob = new Blob([xhrImg.response], {
+        type: xhrImg.getResponseHeader("Content-Type")
+      });
+      const imgUrl = window.URL.createObjectURL(blob);
+      const img = document.createElement('img')
+      img.src = imgUrl
+      document.body.appendChild(img)
+    }
+  }
+  xhrImg.open('GET', '/sample.png')
+  xhrImg.send()
+
+  // fetch('/script-url')
+  //   .then(res => res.text())
+  //   .then(res => console.log(res))
+
+  fetch('/sample.png')
+    .then(res => {
+      return res.arrayBuffer().then(arrayBuffer => {
+        return {
+          contentType: res.headers.get("content-type"),
+          arrayBuffer: arrayBuffer
+        }
+      })
+    })
+    .then(obj => {
+      const blob = new Blob([obj.arrayBuffer], {
+        type: obj.contentType
+      });
+      const imgUrl = window.URL.createObjectURL(blob);
+      const img = document.createElement('img')
+      img.src = imgUrl
+      document.body.appendChild(img)
+    })
+
+  fetch('/sample.png')
+    .then(res => res.blob())
+    .then(blob => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    }))
+    .then(dataURL => {
+      const img = document.createElement('img')
+      img.src = dataURL
+      document.body.appendChild(img)
+    })
+</script>
+</body>
+</html>

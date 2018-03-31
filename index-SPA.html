@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SPA</title>
+</head>
+<body>
+    <div id="app"></div>
+    <script>
+        // const element = document.createElement('div')
+        // const text = document.createTextNode('TEXT!!!')
+        // element.appendChild(text)
+        // document.body.appendChild(element)
+        function getTemplate (selector) {
+          return document.querySelector(selector).textContent
+        }
+        let templates = {
+          // nav: getTemplate('head script[data-name="nav"]'),
+          // root: getTemplate('head script[data-name="root"]'),
+          // checkout: getTemplate('head script[data-name="checkout"]'),
+          // store: getTemplate('head script[data-name="store"]'),
+        }
+        const app = document.getElementById('app')
+        let URL = '/'
+        function render () {
+          let outHTML = ''
+          // const hash = window.location.hash.substring(1)
+          // switch (hash) {
+          switch (window.location.pathname) {
+          // switch (URL) {
+            case '/': case '':
+              outHTML = templates.nav + templates.root
+              break;
+            case '/store':
+              outHTML = templates.nav + templates.store
+              break;
+            case '/checkout':
+              outHTML = templates.nav + templates.checkout
+              break;
+            case '/submit':
+              outHTML = templates.nav + templates.root
+              break;
+          }
+          app.innerHTML = outHTML
+          // if (URL === '/checkout') {
+          if (window.location.pathname === '/checkout') {
+            app.querySelector('form').addEventListener('submit', function (e) {
+              e.preventDefault()
+              const username = app.querySelector('form input[name="username"]').value
+              const password = app.querySelector('form input[name="password"]').value
+              let myHeaders = new Headers()
+              myHeaders.append("Content-Type", "application/x-www-form-urlencoded")
+              fetch("/submit", {
+                method: "POST",
+                headers: myHeaders,
+                body: `username=${username}&password=${password}&my=aaaa`
+              }).then(res => res.json())
+                .then(json => {
+                  alert(JSON.stringify(json))
+                })
+            })
+          }
+        }
+        Promise.all([
+          fetch('/nav').then(res => res.text()),
+          fetch('/root').then(res => res.text()),
+          fetch('/checkout').then(res => res.text()),
+          fetch('/store').then(res => res.text()),
+          fetch('/user').then(res => res.text()),
+        ]).then(results => {
+          templates.nav = results[0]
+          templates.root = results[1]
+          templates.checkout = results[2]
+          templates.store = results[3]
+          templates.user = results[4]
+
+          render()
+
+          fetch('http://jsonplaceholder.typicode.com/users')
+            .then(res => res.json()).then(users => {
+                let usr_str = users.map(user => {
+                  return templates.user.replace('USER_NAME', user.name)
+                })
+
+            let div_users = document.createElement('div')
+            div_users.innerHTML = usr_str.join('')
+            app.appendChild(div_users)
+          })
+        })
+
+        document.body.addEventListener('click', (e) => {
+          const {target} = e
+          // var target = e.target
+          if (target.nodeName === 'A' && target.nodeType === 1) {
+            e.preventDefault()
+            // URL = target.getAttribute('href')
+            history.pushState({}, target.textContent, target.getAttribute('href'))
+            // window.location.hash = target.getAttribute('href').substring(1)
+            render()
+          }
+        })
+    </script>
+</body>
+</html>
